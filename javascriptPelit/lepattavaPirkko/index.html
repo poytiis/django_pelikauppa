@@ -1,0 +1,260 @@
+  <!DOCTYPE html>
+  <html lang='en'>
+  <head>
+    <meta charset='utf-8'>
+    <title>Lepattava Pirkko</title>
+    <style>
+    canvas {
+      display: block;
+      position: absolute;
+      margin: auto;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+    </style>
+  </head>
+  <body>
+    <script>
+    var
+    canvas,
+    ctx,
+    width,
+    height,
+    birdImg,
+    pipeImg,
+    frames = 0,
+    score = 0,
+    gameState, // 0 in scoreboard, 1 when playing game
+    highscore,
+
+    // *** bird
+    bird = {
+      x: 40,
+      y: 0,
+      jump_: 6,
+      gravity: 0.3,
+      velocity: 0,
+
+      init: function() {
+        this.x = 40;
+        this.y = 0;
+      },
+
+      jump: function() {
+        this.velocity = -this.jump_;
+      },
+
+      draw: function(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.drawImage(birdImg, this.x, height/2);
+        ctx.restore();
+      },
+
+      update: function() {
+        this.velocity += this.gravity;
+        this.y += this.velocity;
+
+        // Check if the bird goes out of the canvas
+        if (this.y < ((-height/2)) || this.y > (height/2 - 50)) {
+          gameState = 0;
+        }
+      },
+    },
+
+    // *** pipes
+    pipes = {
+      pipes_: [],
+
+      init: function() {
+        this.pipes_ = [];
+      },
+
+      update: function() {
+        // Add new pipe every 100 frames and increase score
+        if (frames % 100 === 0) {
+          score += 1;
+          var hole = Math.floor(Math.random() * 6) + 1;
+          for (var i = 0; i < 10; i++) {
+            if (i != hole && i != hole + 1 && i != hole + 2)
+            {
+              this.pipes_.push({
+                x: width+50,
+                y: i*50
+              });
+            }
+          }
+        }
+
+        // Move pipes and check collisions
+          for (var i = 0, len = this.pipes_.length; i < len; i++) {
+            var p = this.pipes_[i];
+
+              // collision detection
+              var rect1 = {x: p.x, y: p.y, width: 50, height: 50}
+              var rect2 = {x: bird.x+40, y: bird.y+250, width: 50, height: 50}
+              var crash = false;
+              if (rect1.x < rect2.x + rect2.width &&
+                rect1.x + rect1.width > rect2.x &&
+                rect1.y < rect2.y + rect2.height &&
+                rect1.height + rect1.y > rect2.y) {
+                  crash = true;
+                }
+
+              if (crash) {
+                gameState = 0;
+              }
+
+          // Move pipes to the left
+          p.x -= 2;
+
+          // Remove if out of canvas
+          if (p.x < -50) {
+            this.pipes_.splice(i, 1);
+            i--;
+            len--;
+
+          }
+        }
+      },
+
+      draw: function(ctx) {
+        for (var i = 0, len = this.pipes_.length; i < len; i++) {
+          var p = this.pipes_[i];
+          ctx.drawImage(pipeImg, p.x, p.y);
+        }
+      },
+    }; // *** Var declaration ends
+
+
+    // *** Keypress handler
+    function onpress(e) {
+      // Check if pressed key is spacebar
+      if (e.keyCode == 32) {
+        switch (gameState) {
+          case 0:
+          pipes.init();
+          bird.init();
+          score = 0;
+          gameState = 1;
+          bird.jump();
+          break;
+
+          case 1:
+          bird.jump();
+          break;
+        }
+      }
+    }
+
+    // *** Main function
+    function main() {
+      // Setup canvas
+      canvas = document.createElement('canvas');
+      width = 500;
+      height = 500;
+      canvas.width = width;
+      canvas.height = height;
+      canvas.style.border = '1px solid black';
+      ctx = canvas.getContext('2d');
+      document.body.appendChild(canvas);
+      ctx.fillStyle = '#00ccff';
+
+      // Set event listener to listen keypresses
+      var e = 'keypress';
+      document.addEventListener(e, onpress);
+
+      // TODO: ..test when server is ready !!!
+      // Send loading request to server and add receiver
+      // loadHighScore(); // sendHighScore also when getting new hs
+      //window.addEventListener('message', receiver, false);
+
+      // Set gamestate to playmode
+      gameState = 1;
+
+      // Setup imnages. Onload function is executed when document is ready.
+      birdImg = new Image();
+      pipeImg = new Image();
+      birdImg.onload = function() {
+        ctx.drawImage(birdImg, 100,100);
+        run();
+      };
+      birdImg.src = 'assets/bird.png'
+      pipeImg.src = 'assets/pipe.png'
+
+    }
+
+    // *** 'Game loop'
+    function run() {
+      var loop = function() {
+        update();
+        render();
+        window.requestAnimationFrame(loop);
+      }
+      window.requestAnimationFrame(loop);
+    }
+
+    // *** Update bird and pipes
+    function update() {
+      if(gameState === 1) {
+        frames++;
+        bird.update();
+        pipes.update();
+      }
+    }
+
+    // *** Draw things to canvas
+    function render() {
+      if(gameState === 0) {
+        ctx.font = "25pt Arial";
+        var t;
+        if (score > highscore) {
+          highscore = score;
+          t = "Game over. New high score( " + score + " )!";
+        } else {
+          t = "Game over. Score: " + score;
+        }
+
+        ctx.strokeText(t,0,height/2);
+      }
+      else {
+        ctx.font = "25pt Arial";
+        ctx.fillRect(0,0,width,height);
+        bird.draw(ctx);
+        pipes.draw(ctx);
+        ctx.strokeText(score, 40, 40);
+      }
+    }
+
+    /*
+    function sendHighScore() {
+      var msg =
+      {
+        "messageType": "SCORE",
+        "score": highscore
+      };
+      window.parent.postMessage(msg, "*");
+    }
+
+    function loadHighScore() {
+      var msg =
+      {
+        "messageType": "LOAD_REQUEST",
+      };
+      window.parent.postMessage(msg, "*");
+    }
+
+    function receiver(event) {
+      if (event.origin == "*") {
+        highscore = event.data;
+        }
+      }
+    }
+    */
+
+    main();
+    </script>
+  </body>
+  </html>

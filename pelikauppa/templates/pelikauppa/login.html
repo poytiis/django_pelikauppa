@@ -1,0 +1,24 @@
+{% extends "pelikauppa/base.html" %}
+{% block content %}
+
+<title>Kirjaudu sisään</title>
+<h3>Kirjaudu sisään</h3>
+<form action="{% url 'pelikauppa:login_user'%}" method="post">
+    {% csrf_token %}
+    <label>Käyttäjätunnus:</label>
+    <div>
+        <input id="id_username" name="username" type="text">
+    </div>
+    <label>Salasana:</label>
+    <div>
+        <input id="id_password" name="password" type="password">
+    </div>
+    <div>
+        <button type="submit" class="btn btn-success">Submit</button>
+    </div>
+    <div>
+        <a href="{% url 'pelikauppa:register' %}">Rekisteröidy.</a>
+    </div>
+
+</form>
+{% endblock %}

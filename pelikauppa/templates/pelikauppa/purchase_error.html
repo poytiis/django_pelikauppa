@@ -1,0 +1,7 @@
+{% extends "pelikauppa/base.html" %}
+{% block content %}
+<h2>Maksamisessa tapahtui virhe.</h2>
+<ul>
+    <li><a href="{% url 'pelikauppa:player_starting_view' %}">Palaa</a></li>
+</ul>
+{% endblock %}

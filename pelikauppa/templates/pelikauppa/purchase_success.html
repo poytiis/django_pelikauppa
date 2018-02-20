@@ -1,0 +1,10 @@
+{% extends "pelikauppa/base.html" %}
+{% block content %}
+<h2>Maksaminen onnistui.</h2>
+<ul>
+  <form action="{% url 'pelikauppa:add_game_to_player'%}" method='POST'>
+      {% csrf_token %}
+      <button type="submit" name='selected_game' value={{pid}}>Paluu</button>
+  </form>
+</ul>
+{% endblock %}

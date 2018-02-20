@@ -1,0 +1,117 @@
+{% extends "pelikauppa/base.html" %}
+{% block content %}
+<head>
+    {% csrf_token %}
+    <script source = "https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js" >
+
+        var score = 0;
+        var speedFactor = 0;
+        var json_data;
+
+        // Allow post messages without csrf-token.
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": getCookie("csrftoken") }
+        });
+
+        function getCookie(c_name)
+        {
+            if (document.cookie.length > 0)
+            {
+                c_start = document.cookie.indexOf(c_name + "=");
+                if (c_start != -1)
+                {
+                    c_start = c_start + c_name.length + 1;
+                    c_end = document.cookie.indexOf(";", c_start);
+                    if (c_end == -1) c_end = document.cookie.length;
+                    return unescape(document.cookie.substring(c_start,c_end));
+                }
+            }
+            return "";
+        }
+        // Listen for the messages from the JavaScript game.
+        window.addEventListener("message", function(evt)
+        {
+            var iFrame = document.getElementById( 'iFrame1' );
+            iFrame.contentWindow.focus();
+
+            if(evt.data.messageType === "SETTING")
+            {
+                iFrame.width = evt.data.options.width;
+                iFrame.height = evt.data.options.height;
+            }
+            else if(evt.data.messageType === "SAVE")
+            {
+                score = evt.data.gameState.score;
+                speedFactor = evt.data.gameState.speedFactor;
+                var msg =
+                {
+                    gameURL: "{{gameurl}}",
+                    currUser: "{{curruser}}",
+                    gameState:
+                    {
+                        score: parseFloat(score),
+                        speedFactor: parseFloat(speedFactor)
+                    }
+                };
+
+                json_msg = JSON.stringify(msg);
+                $.post('http://{{ request.get_host }}{% url 'pelikauppa:save_game_data' %}', {json_msg:json_msg});
+
+            }
+            else if(evt.data.messageType === "SCORE")
+            {
+                $.post('http://{{ request.get_host }}{% url 'pelikauppa:submit_high_score' %}', {"gameURL":"{{gameurl}}",
+                                                    "currUser":"{{curruser}}", "score":evt.data.score});
+            }
+            else if(evt.data.messageType === "LOAD_REQUEST")
+            {
+                $.get('http://{{ request.get_host }}{% url 'pelikauppa:load_game_data' %}', {"gameURL":"{{gameurl}}", "currUser":"{{curruser}}"},
+                function(data)
+                {
+                    json_data = JSON.parse(data);
+
+                    var msg =
+                    {
+                        "messageType": "LOAD",
+                        "gameState":
+                        {
+                            "score": parseFloat(json_data['gameState']['score']),
+                            "speedFactor": parseFloat(json_data['gameState']['speedFactor'])
+                        }
+                    };
+                    var frameWindow = iFrame.contentWindow;
+                    frameWindow.postMessage(msg, "*");
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <div style="width: 100%; overflow: hidden;">
+        <div style="width: 600px; float: left;">
+            <iframe src='{{gameurl}}', id='iFrame1'></iframe>
+        </div>
+        <div style="margin-left: 650px;">
+            <ul>
+                <h2>Ennätykset:</h2>
+                <table style="width:100%">
+                    <tr>
+                        <th>Pelaaja</th>
+                        <th>Tulos</th>
+                    </tr>
+                    {% for item in highscores %}
+                    <tr>
+                        <td>
+                            {{item.name}}
+                        </td>
+                        <td>
+                            {{item.highscore}}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+        </div>
+    </div>
+</body>
+
+{% endblock %}

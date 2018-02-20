@@ -1,0 +1,23 @@
+{% extends "pelikauppa/base.html" %}
+{% block content %}
+<h2>Pelikauppa</h2>
+<form action="http://simplepayments.herokuapp.com/pay/" method="POST">
+    <input type="hidden" name="pid" value= "{{pid}}" />
+    <input type="hidden" name="sid" value= "{{sid}}" />
+    <input type="hidden" name="success_url"
+                         value="http://{{ request.get_host }}{% url 'pelikauppa:purchase_success' %}" />
+    <input type="hidden" name="cancel_url"
+            value="http://{{ request.get_host }}{% url 'pelikauppa:purchase_cancel' %}" />
+    <input type="hidden" name="error_url"
+            value="http://{{ request.get_host }}{% url 'pelikauppa:purchase_error' %}" />
+    <input type="hidden" name="checksum"
+            value="{{checksum}}" />
+
+    <input type="hidden" id="id_amount" name="amount" value="{{amount}}" />
+    <input type="submit" value="Accept Payment"/>
+</form>
+
+<ul>
+    <li><a href="{% url 'pelikauppa:purchase_cancel' %}">Peruuta</a></li>
+</ul>
+{% endblock %}

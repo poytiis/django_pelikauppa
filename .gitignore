@@ -1,0 +1,6 @@
+*.pyc
+*.swp
+*.DS_*
+venv
+staticfiles
+.env

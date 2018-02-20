@@ -1,0 +1,38 @@
+{% extends "pelikauppa/base.html" %}
+{% block content %}
+
+{% if user.is_authenticated %}
+<h3>Lista kaikista sinun peleistäsi:</h3>
+<ul>
+{% for game in playergames %}
+<li>
+    <form action="{% url 'pelikauppa:open_game_view'%}" method='post'>
+        {% csrf_token %}
+        {{game.name}} | 
+        <button type="submit" name='selected_game_url' value={{game.url}}>Pelaa peliä</button>
+    </form>
+</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<h3>Lista kaikista kaupan peleistä:</h3>
+<ul>
+{% for field in allgames %}
+
+<li>
+    {% if field in playergames %}
+        {{field.name}} | Omistat tämän pelin.
+    {% else %}
+        <form action="{% url 'pelikauppa:purchase'%}" method='post'>
+            {% csrf_token %}
+            {{field.name}} | {{field.price}} € | 
+            <button type="submit"name='selected_game' value={{field.pk}}>Osta peli</button>
+        </form>
+    {% endif %}
+</li>
+
+{% endfor %}
+
+</ul>
+{% endblock %}

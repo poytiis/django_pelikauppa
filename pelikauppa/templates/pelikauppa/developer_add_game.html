@@ -1,0 +1,27 @@
+{% extends "pelikauppa/base.html" %}
+{% block content %}
+<h4>Lisää peli:</h4>
+<form id='add_game' action="{% url 'pelikauppa:developer_add_game'%}" method="post">
+    {% csrf_token %}
+    {% for field in gameform %}
+        <div> {{field.label_tag}} {{field}}</div>
+    {% endfor %}
+    <button type="submit">Submit</button>
+</form>
+
+<h4>Lista sinun peleistäsi:</h3>
+{% for field in devgamelist %}
+    <label> {{field.name}} </label>
+    <form action="{% url 'pelikauppa:developer_remove_game'%}"
+        method='post' style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" name='selected_game' value={{field.pk}}>Poista peli</button>
+    </form>
+
+    <form action="{% url 'pelikauppa:game_sales'%}" method='post' style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" name='selected_game' value={{field.pk}}>Myyntitilastot</button>
+    </form>
+{% endfor %}
+
+{% endblock %}

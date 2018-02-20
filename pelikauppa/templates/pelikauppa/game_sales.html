@@ -1,0 +1,14 @@
+{% extends "pelikauppa/base.html" %}
+{% block content %}
+
+{% if user.is_authenticated %}
+<h3>Pelisi myyntitilastot:</h3>
+<ul>
+{% for purchase in list %}
+<li>
+    {{purchase.time}}
+</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "pelikauppa/base.html" %}
+{% block content %}
+
+<h3>Rekisteröidy</h3>
+
+<form id='rekisteräidy' action="" method="post">
+    {% csrf_token %}
+    {% for field in userform %}
+    <label> {{field.label_tag}} </label>
+    <div> {{field}} </div>
+    {% endfor %}
+    {% for field in userprofileform %}
+    <label> {{field.label_tag}} </label>
+    <div> {{field}} </div>
+    {% endfor %}
+    <button type="submit">Submit</button>
+</form>
+{% endblock %}
